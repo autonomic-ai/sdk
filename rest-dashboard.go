@@ -51,6 +51,7 @@ type BoardProperties struct {
 	UpdatedBy  string    `json:"updatedBy"`
 	CreatedBy  string    `json:"createdBy"`
 	Version    int       `json:"version"`
+	FolderID   int       `json:"folderId"`
 }
 
 // GetDashboardByUID loads a dashboard and its metadata from Grafana by dashboard uid.
