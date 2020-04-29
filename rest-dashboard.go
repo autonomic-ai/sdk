@@ -257,27 +257,39 @@ func (r *Client) SetDashboard(ctx context.Context, board Board, params SetDashbo
 // may be only loaded with HTTP API but not created or updated.
 //
 // Reflects POST /api/dashboards/db API call.
-func (r *Client) SetRawDashboard(ctx context.Context, raw []byte) (StatusMessage, error) {
+func (r *Client) SetRawDashboard(ctx context.Context, raw []byte, params SetDashboardParams) (StatusMessage, error) {
 	var (
-		rawResp []byte
-		resp    StatusMessage
-		code    int
-		err     error
-		buf     bytes.Buffer
-		plain   = make(map[string]interface{})
+		rawResp  []byte
+		resp     StatusMessage
+		code     int
+		err      error
+		plain    = make(map[string]interface{})
+		newBoard struct {
+			Dashboard map[string]interface{} `json:"dashboard"`
+			FolderId  int                    `json:"folderId"`
+			Overwrite bool                   `json:"overwrite"`
+		}
 	)
 	if err = json.Unmarshal(raw, &plain); err != nil {
 		return StatusMessage{}, err
 	}
-	// TODO(axel) fragile place, refactor it
+	// Reset the dashboard id. This handles the case of new dashboards, and overwrites
+	// can be done using uid.
 	plain["id"] = 0
-	raw, _ = json.Marshal(plain)
-	buf.WriteString(`{"dashboard":`)
-	buf.Write(raw)
-	buf.WriteString(`, "overwrite": true}`)
-	if rawResp, code, err = r.post(ctx, "api/dashboards/db", nil, buf.Bytes()); err != nil {
+
+	newBoard.Dashboard = plain
+	newBoard.FolderId = params.FolderID
+	newBoard.Overwrite = params.Overwrite
+
+	requestBody, err := json.Marshal(newBoard)
+	if err != nil {
 		return StatusMessage{}, err
 	}
+
+	if rawResp, code, err = r.post(ctx, "api/dashboards/db", nil, requestBody); err != nil {
+		return StatusMessage{}, err
+	}
+
 	if err = json.Unmarshal(rawResp, &resp); err != nil {
 		return StatusMessage{}, err
 	}

@@ -63,7 +63,7 @@ func main() {
 				log.Println(err)
 				continue
 			}
-			_, err := c.SetRawDashboard(ctx, rawBoard)
+			_, err := c.SetRawDashboard(ctx, rawBoard, sdk.SetDashboardParams{FolderID: 0, Overwrite: true})
 			if err != nil {
 				log.Printf("error on importing dashboard from %s", file.Name())
 				continue
